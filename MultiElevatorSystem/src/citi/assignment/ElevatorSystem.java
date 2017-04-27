@@ -1,11 +1,13 @@
 package citi.assignment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import citi.assignment.comparators.ElevatorCompSort;
 import citi.assignment.constants.ElevatorConstants;
 import citi.assignment.enums.RequestType;
 
@@ -18,7 +20,6 @@ public class ElevatorSystem
 {
 	private static List<Elevator> elevatorList;
 	private static Scheduler scheduler;
-	private static List<Request> waitingRequests=new ArrayList<Request>();
 		
 	public static void main(String[] args) throws InterruptedException 
 	{
@@ -36,12 +37,12 @@ public class ElevatorSystem
 			Thread.sleep(1000);
 		}
 		
-		//Serving the remainder requests
+		/*//Serving the remainder requests
 		for(Request request : waitingRequests)
 		{
 			distributeTheRequest(request);
 			Thread.sleep(1000);
-		}
+		}*/
 		
 	}
 	
@@ -146,17 +147,11 @@ public class ElevatorSystem
 	 */
 	public static void processGoingUpDownRequest(Request request) throws InterruptedException
 	{
-		//Refreshing the Elevators 
-		for(Elevator elevator : elevatorList)
-		{
-			elevator.setServingRequest();
-		}
-		
 		List<Elevator> knowAvailableElevators=knowAvailableElevators(request.getRequestType());
 		
 		if(knowAvailableElevators.size()==0)
 		{
-			waitingRequests.add(request);
+			checkIfAnyElevatorCouldBeForOppositeDirection(request);
 		}
 		else
 		{
@@ -195,5 +190,53 @@ public class ElevatorSystem
 	{
 		short personAtFloor=request.getAtFloor();
 		scheduler.schedule(request, personAtFloor, list);
+	}
+	
+	public static void checkIfAnyElevatorCouldBeForOppositeDirection(Request request) throws InterruptedException
+	{
+		// No Elevator is available for going upwards
+		Elevator elevator;
+		elevator=findElevatorWhichCanComeFirst(request.getRequestType());
+		
+		if(elevator!=null)
+		{
+			elevator.canAcceptRequest(request);
+		}
+	}
+	
+	public static Elevator findElevatorWhichCanComeFirst(RequestType requestType)
+	{
+		List<Elevator> eligibleElevators= new ArrayList<Elevator>(ElevatorConstants.ELEVATOR_COUNT);
+		Elevator elevator;
+		
+		// Finding elevators which are not busy
+		for(Elevator elev : elevatorList)
+		{
+			if(!elev.isServingRequest())
+			{
+				eligibleElevators.add(elev);
+			}
+		}
+		
+		if(eligibleElevators.size()==0)
+		{
+			return null;
+		}
+		Collections.sort(eligibleElevators,new ElevatorCompSort<Elevator>());
+		
+		//This is the shortest to the ground floor
+		if(requestType==RequestType.REQUEST_GO_UP)
+		{
+			elevator=eligibleElevators.get(0);
+			elevator.setCurrentFloor((short) 0);
+			elevator.setGoingUp(false);
+		}
+		else
+		{
+			elevator=eligibleElevators.get(eligibleElevators.size()-1);
+			elevator.setCurrentFloor(ElevatorConstants.TOWER_FLOORS);
+			elevator.setGoingUp(true);
+		}
+		return elevator;
 	}
 }

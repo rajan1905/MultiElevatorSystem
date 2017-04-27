@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 
 import citi.assignment.constants.ElevatorConstants;
-import citi.assignment.enums.RequestType;
 import citi.assignment.interfaces.ElevatorInterface;
 
 /**
@@ -30,8 +29,7 @@ public class Elevator implements ElevatorInterface,Serializable
 	private short currentFloor;
 	private boolean isActive;
 	private boolean isUnderMaintenance;
-	private ArrayList<Short> stoppingPointsPick;
-	private ArrayList<Short> stoppingPointsDrop;
+	private ArrayList<Short> stoppingPoints;
 	private boolean isServingRequest;
 
 	//Suppresses default constructor, ensuring non-instantiability.
@@ -113,8 +111,7 @@ public class Elevator implements ElevatorInterface,Serializable
 	{
 		if(serviceThread==null)
 		{
-			stoppingPointsPick=new ArrayList<Short>(1);
-			stoppingPointsDrop=new ArrayList<Short>(1);
+			stoppingPoints=new ArrayList<Short>(1);
 			serviceThread=new Thread(new ServiceThread(queue));
 			serviceThread.start();
 		}
@@ -130,82 +127,42 @@ public class Elevator implements ElevatorInterface,Serializable
 	@Override
 	public void processRequest(Request request) throws InterruptedException 
 	{
-		short queueSize=(short) queue.size();
-		Request requestBackup=request;
-	
 		isServingRequest=true;
-		// First Going to the floor to pick the person
-		if(request.getRequestType()==RequestType.REQUEST_GO_UP)
+		while(stoppingPoints.size()>0)
 		{
-		while(currentFloor<request.getAtFloor())
-		{
-			currentFloor++;
+			short floorNext=stoppingPoints.get(0);
+			stoppingPoints.remove(0);
 			
-			//A new request is in and it falls in our path
-			if(queueSize!=queue.size())
+			if(currentFloor<=floorNext)
 			{
-				queue.put(request);
-				Request checkForNewRequest=queue.take();
-				
-				if(!checkForNewRequest.equals(requestBackup))
-					request=checkForNewRequest;
-			}
-			
-			if(stoppingPointsPick.size()>0)
-				if(currentFloor==stoppingPointsPick.get(0))
-					{
-						System.out.println("Elevator : "+elevatorNumber+" stopped to pick at floor : "+currentFloor);
-						stoppingPointsPick.remove(0);
-					}
-				
-				if(stoppingPointsDrop.size()>0)
-					if(currentFloor==stoppingPointsDrop.get(0))
-						{
-							System.out.println("Elevator : "+elevatorNumber+" stopped to drop at floor : "+currentFloor);
-							stoppingPointsDrop.remove(0);
-						}
-				Thread.sleep(ElevatorConstants.TIME_TO_REACH_A_SINGLE_FLOOR);
-				
-		}
-		}
-		else
-		{
-			while(currentFloor>request.getAtFloor())
-			{
-				currentFloor--;
-				
-				//A new request is in and it falls in our path
-				if(queueSize!=queue.size())
+				for(short current=currentFloor;current<=floorNext;current++)
 				{
-					queue.put(request);
-					Request checkForNewRequest=queue.take();
-					
-					if(!checkForNewRequest.equals(requestBackup))
-						request=checkForNewRequest;
-				}
-				
-				if(stoppingPointsPick.size()>0)
-					if(currentFloor==stoppingPointsPick.get(0))
-						{
-							System.out.println("Elevator : "+elevatorNumber+" stopped to pick at floor : "+currentFloor);
-							stoppingPointsPick.remove(0);
-						}
-					
-					if(stoppingPointsDrop.size()>0)
-						if(currentFloor==stoppingPointsDrop.get(0))
-							{
-								System.out.println("Elevator : "+elevatorNumber+" stopped to drop at floor : "+currentFloor);
-								stoppingPointsDrop.remove(0);
-							}
 					Thread.sleep(ElevatorConstants.TIME_TO_REACH_A_SINGLE_FLOOR);
-					
+					System.out.println("Elevator :"+elevatorNumber+" at Floor : "+currentFloor);
+					currentFloor=current;
+				}
 			}
+			
+			else
+			{
+				for(short current=currentFloor;current>=floorNext;current--)
+				{
+					Thread.sleep(ElevatorConstants.TIME_TO_REACH_A_SINGLE_FLOOR);
+					System.out.println("Elevator :"+elevatorNumber+" at Floor : "+currentFloor);
+					currentFloor=current;
+				}
+			}
+			
+			
+			Thread.sleep(ElevatorConstants.TIME_TO_REACH_A_SINGLE_FLOOR);	
 		}
+		
 		if(currentFloor==ElevatorConstants.TOWER_FLOORS)
 		{
 			setGoingUp(false);
 			System.out.println("Elevator : "+elevatorNumber+" is now going DOWN");
 		}
+		
 		else if(currentFloor==0)
 		{
 			setGoingUp(true);
@@ -254,15 +211,6 @@ public class Elevator implements ElevatorInterface,Serializable
 	public boolean isServingRequest() 
 	{
 		return isServingRequest;
-	}
-
-	public void setServingRequest() 
-	{
-		if(isServingRequest==false)
-		{
-			if(currentFloor>((ElevatorConstants.TOWER_FLOORS/2)+1))
-				setGoingUp(false);		
-		}
 	}
 
 	public boolean isActive() 
@@ -334,10 +282,12 @@ public class Elevator implements ElevatorInterface,Serializable
 	
 	public void calculateStoppingPoint(Request request)
 	{
-		stoppingPointsPick.add(request.getAtFloor());
-		stoppingPointsDrop.add(request.getGoingToFloor());
+		if(!(stoppingPoints.contains(request.getAtFloor())))
+		stoppingPoints.add(request.getAtFloor());
 		
-		Collections.sort(stoppingPointsPick);
-		Collections.sort(stoppingPointsDrop);
+		if(!(stoppingPoints.contains(request.getGoingToFloor())))
+		stoppingPoints.add(request.getGoingToFloor());
+		
+		Collections.sort(stoppingPoints);
 	}
 }
