@@ -1,16 +1,40 @@
 package citi.assignment;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import citi.assignment.comparators.ElevatorCompSort;
 import citi.assignment.enums.RequestType;
 
+/**
+ * This is a Scheduler class which the schedules the service request 
+ * to any Elevator in the System.
+ * 
+ * @author rajan.singh
+ *
+ */
 public class Scheduler 
 {
-	public void schedule(Request request, short atFloor, List<Elevator> eligibleElevators, List<Elevator> allElevators) throws InterruptedException
+	private static List<Request> waitingRequests=new ArrayList<Request>();
+	
+	public void schedule(Request request, short atFloor, List<Elevator> eligibleElevators) throws InterruptedException
 	{
-Elevator elevator=null;
+		Elevator elevator=null;
+		
+		// TODO The algo needs to be worked upon for this part.
+		
+		//Check for waitingRequests and see if we can process them
+		/*
+		for(Request req : waitingRequests)
+		{
+			if(req.getRequestType()==request.getRequestType())
+			{
+				schedule(request, req.getAtFloor(), eligibleElevators);
+				waitingRequests.remove(req);
+			}
+		}
+		*/
 		
 		// Find if any elevator is at current floor.
 		for(Elevator elev : eligibleElevators)
@@ -39,7 +63,7 @@ Elevator elevator=null;
 				}
 			}
 		}
-		else
+		else if(request.getRequestType()==RequestType.REQUEST_GO_DOWN)
 		{
 			// Check if any lift already present at current floor and going up.
 						for(Elevator elev : eligibleElevators)
@@ -52,14 +76,10 @@ Elevator elevator=null;
 						}
 		}
 		
-		// No elevator present for current floor. Need to find the Elevator which could be the first to serve.
+		
 		if(elevator==null)
-		{	Collections.sort(allElevators,new ElevatorCompSort<Elevator>());
-			elevator=allElevators.get(0);
-			RequestType reqType=(request.getRequestType()==RequestType.REQUEST_GO_UP)?RequestType.REQUEST_GO_DOWN:request.getRequestType();
-			Request req=new Request("", reqType , request.getAtFloor(), elevator.getCurrentFloor());
-			elevator.canAcceptRequest(req);
-			elevator.canAcceptRequest(request);
+		{	
+			waitingRequests.add(request);
 		}
 	}
 }

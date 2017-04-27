@@ -27,7 +27,7 @@ public class ElevatorSystem
 		System.out.println("------Welcome to Citi------");
 		
 		System.out.println("-----Creating and Serving Request-----");
-		for(int i=1;i<=20;i++)
+		for(int i=1;i<=10;i++)
 		{
 			Request request=requestGenerator();
 			System.out.println(request);
@@ -71,7 +71,6 @@ public class ElevatorSystem
 	public static Request requestGenerator()
 	{
 		Random random=new Random();
-		String name="Person"+random.nextInt(Short.MAX_VALUE);
 		short goingTo=(short) random.nextInt(10);
 		short from=(short) random.nextInt(10);
 		Request request=null;
@@ -82,7 +81,7 @@ public class ElevatorSystem
 		{
 			if(goingTo!=from && goingTo>from)
 			{
-				request=new Request(name, RequestType.REQUEST_GO_UP, goingTo, from);
+				request=new Request(RequestType.REQUEST_GO_UP, goingTo, from);
 			}
 			else
 			{
@@ -93,7 +92,7 @@ public class ElevatorSystem
 		{
 			if(goingTo!=from && goingTo<from)
 			{
-				request=new Request(name, RequestType.REQUEST_GO_DOWN, goingTo, from);
+				request=new Request(RequestType.REQUEST_GO_DOWN, goingTo, from);
 			}
 			else
 			{
@@ -172,6 +171,6 @@ public class ElevatorSystem
 	public static void dispatchRequestToElevator(Request request , List<Elevator> list) throws InterruptedException
 	{
 		short personAtFloor=request.getAtFloor();
-		scheduler.schedule(request, personAtFloor, list, elevatorList);
+		scheduler.schedule(request, personAtFloor, list);
 	}
 }

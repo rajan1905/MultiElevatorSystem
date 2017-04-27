@@ -8,7 +8,15 @@ import java.util.concurrent.BlockingQueue;
 import citi.assignment.constants.ElevatorConstants;
 import citi.assignment.interfaces.ElevatorInterface;
 
-public class Elevator implements ElevatorInterface,Runnable,Serializable
+/**
+ * 
+ * This is an Elevator class which accepts Request actions to perform
+ * upon.
+ * 
+ * @author rajan.singh
+ *
+ */
+public class Elevator implements ElevatorInterface,Serializable
 {
 	/**
 	 * Default serialVersionUID
@@ -103,7 +111,6 @@ public class Elevator implements ElevatorInterface,Runnable,Serializable
 		}
 	}
 
-	
 	@Override
 	public void addRequest(Request request) throws InterruptedException 
 	{
@@ -116,9 +123,6 @@ public class Elevator implements ElevatorInterface,Runnable,Serializable
 	{
 		short queueSize=(short) queue.size();
 		Request requestBackup=request;
-		
-		System.out.println("----------------------------------------------------------------------");
-		System.out.println("Elevator : "+elevatorNumber+" recieved request for : "+request.getGoingToFloor()+" from floor : "+request.getAtFloor());
 		
 		// First Going to the floor to pick the person
 		while(currentFloor<request.getAtFloor())
@@ -138,7 +142,7 @@ public class Elevator implements ElevatorInterface,Runnable,Serializable
 			if(stoppingPointsPick.size()>0)
 				if(currentFloor==stoppingPointsPick.get(0))
 					{
-						System.out.println("Elevator : "+elevatorNumber+" stopped to at floor : "+currentFloor);
+						System.out.println("Elevator : "+elevatorNumber+" stopped to pick at floor : "+currentFloor);
 						stoppingPointsPick.remove(0);
 					}
 				
@@ -162,7 +166,6 @@ public class Elevator implements ElevatorInterface,Runnable,Serializable
 			setGoingUp(true);
 			System.out.println("Elevator : "+elevatorNumber+" is now going UP");
 		}
-		System.out.println("----------------------------------------------------------------------");
 	}
 
 	@Override
@@ -209,7 +212,6 @@ public class Elevator implements ElevatorInterface,Runnable,Serializable
 	public void setActive(boolean isActive) 
 	{
 		this.isActive = isActive;
-		setServiceThread();
 	}
 
 	public boolean isUnderMaintenance() 
@@ -222,29 +224,6 @@ public class Elevator implements ElevatorInterface,Runnable,Serializable
 		this.isUnderMaintenance = isUnderMaintenance;
 	}
 
-	@Override
-	public void run() 
-	{
-		while(isActive && !isUnderMaintenance)
-		{
-			Request request;
-			try 
-			{
-				request = queue.take();
-			
-				if(request!=null)
-				{
-					processRequest(request);
-					
-				}
-			} catch (InterruptedException e) 
-			{
-				e.printStackTrace();
-			}
-		}
-		
-	}
-	
 	private class ServiceThread implements Runnable
 	{
 		BlockingQueue<Request> queue;
@@ -284,18 +263,19 @@ public class Elevator implements ElevatorInterface,Runnable,Serializable
 	{
 		if(queue.remainingCapacity()>0 && isActive && !isUnderMaintenance)
 		{
-			queue.put(request);
-			addStoppingPoint(request);
+			addRequest(request);
+			calculateStoppingPoint(request);
 			
 			return true;
 		}
 		return false;
 	}
 	
-	public void addStoppingPoint(Request request)
+	public void calculateStoppingPoint(Request request)
 	{
 		stoppingPointsPick.add(request.getAtFloor());
 		stoppingPointsDrop.add(request.getGoingToFloor());
+		
 		Collections.sort(stoppingPointsPick);
 		Collections.sort(stoppingPointsDrop);
 	}
