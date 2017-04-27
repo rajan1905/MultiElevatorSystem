@@ -18,7 +18,8 @@ public class ElevatorSystem
 {
 	private static List<Elevator> elevatorList;
 	private static Scheduler scheduler;
-	
+	private static List<Request> waitingRequests=new ArrayList<Request>();
+		
 	public static void main(String[] args) throws InterruptedException 
 	{
 		scheduler=new Scheduler();
@@ -31,6 +32,13 @@ public class ElevatorSystem
 		{
 			Request request=requestGenerator();
 			System.out.println(request);
+			distributeTheRequest(request);
+			Thread.sleep(1000);
+		}
+		
+		//Serving the remainder requests
+		for(Request request : waitingRequests)
+		{
 			distributeTheRequest(request);
 			Thread.sleep(1000);
 		}
@@ -55,6 +63,7 @@ public class ElevatorSystem
 					.isActive(true)
 					.isGoingUp(true)
 					.isUnderMaintenance(false)
+					.isServingRequest(false)
 					.queue(new PriorityBlockingQueue<Request>(ElevatorConstants.ELEVATOR_CAPACITY))
 					.build();
 			
@@ -137,8 +146,22 @@ public class ElevatorSystem
 	 */
 	public static void processGoingUpDownRequest(Request request) throws InterruptedException
 	{
+		//Refreshing the Elevators 
+		for(Elevator elevator : elevatorList)
+		{
+			elevator.setServingRequest();
+		}
+		
 		List<Elevator> knowAvailableElevators=knowAvailableElevators(request.getRequestType());
-		dispatchRequestToElevator(request, knowAvailableElevators);
+		
+		if(knowAvailableElevators.size()==0)
+		{
+			waitingRequests.add(request);
+		}
+		else
+		{
+			dispatchRequestToElevator(request, knowAvailableElevators);
+		}
 	}
 	
 	/**

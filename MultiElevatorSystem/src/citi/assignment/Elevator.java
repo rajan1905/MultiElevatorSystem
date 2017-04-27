@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 
 import citi.assignment.constants.ElevatorConstants;
+import citi.assignment.enums.RequestType;
 import citi.assignment.interfaces.ElevatorInterface;
 
 /**
@@ -31,6 +32,7 @@ public class Elevator implements ElevatorInterface,Serializable
 	private boolean isUnderMaintenance;
 	private ArrayList<Short> stoppingPointsPick;
 	private ArrayList<Short> stoppingPointsDrop;
+	private boolean isServingRequest;
 
 	//Suppresses default constructor, ensuring non-instantiability.
 	private Elevator(ElevatorBuilder elevatorBuilder)
@@ -41,6 +43,7 @@ public class Elevator implements ElevatorInterface,Serializable
 		currentFloor=elevatorBuilder.currentFloor;
 		isActive=elevatorBuilder.isActive;
 		isUnderMaintenance=elevatorBuilder.isUnderMaintenance;
+		isServingRequest=elevatorBuilder.isServingRequest;
 		setServiceThread();
 	}
 	
@@ -57,6 +60,7 @@ public class Elevator implements ElevatorInterface,Serializable
 		private short currentFloor;
 		private boolean isActive;
 		private boolean isUnderMaintenance;
+		private boolean isServingRequest;
 		
 		public ElevatorBuilder elevatorNumber(short elevatorNumbr)
 		{
@@ -94,6 +98,11 @@ public class Elevator implements ElevatorInterface,Serializable
 			return this;
 		}
 		
+		public ElevatorBuilder isServingRequest(boolean servingRequest)
+		{
+			isServingRequest=servingRequest;
+			return this;
+		}
 		public Elevator build()
 		{
 			return new Elevator(this);
@@ -123,8 +132,11 @@ public class Elevator implements ElevatorInterface,Serializable
 	{
 		short queueSize=(short) queue.size();
 		Request requestBackup=request;
-		
+	
+		isServingRequest=true;
 		// First Going to the floor to pick the person
+		if(request.getRequestType()==RequestType.REQUEST_GO_UP)
+		{
 		while(currentFloor<request.getAtFloor())
 		{
 			currentFloor++;
@@ -155,7 +167,40 @@ public class Elevator implements ElevatorInterface,Serializable
 				Thread.sleep(ElevatorConstants.TIME_TO_REACH_A_SINGLE_FLOOR);
 				
 		}
-		
+		}
+		else
+		{
+			while(currentFloor>request.getAtFloor())
+			{
+				currentFloor--;
+				
+				//A new request is in and it falls in our path
+				if(queueSize!=queue.size())
+				{
+					queue.put(request);
+					Request checkForNewRequest=queue.take();
+					
+					if(!checkForNewRequest.equals(requestBackup))
+						request=checkForNewRequest;
+				}
+				
+				if(stoppingPointsPick.size()>0)
+					if(currentFloor==stoppingPointsPick.get(0))
+						{
+							System.out.println("Elevator : "+elevatorNumber+" stopped to pick at floor : "+currentFloor);
+							stoppingPointsPick.remove(0);
+						}
+					
+					if(stoppingPointsDrop.size()>0)
+						if(currentFloor==stoppingPointsDrop.get(0))
+							{
+								System.out.println("Elevator : "+elevatorNumber+" stopped to drop at floor : "+currentFloor);
+								stoppingPointsDrop.remove(0);
+							}
+					Thread.sleep(ElevatorConstants.TIME_TO_REACH_A_SINGLE_FLOOR);
+					
+			}
+		}
 		if(currentFloor==ElevatorConstants.TOWER_FLOORS)
 		{
 			setGoingUp(false);
@@ -166,6 +211,8 @@ public class Elevator implements ElevatorInterface,Serializable
 			setGoingUp(true);
 			System.out.println("Elevator : "+elevatorNumber+" is now going UP");
 		}
+		
+		isServingRequest=false;
 	}
 
 	@Override
@@ -202,6 +249,20 @@ public class Elevator implements ElevatorInterface,Serializable
 	public void setCurrentFloor(short currentFloor) 
 	{
 		this.currentFloor = currentFloor;
+	}
+
+	public boolean isServingRequest() 
+	{
+		return isServingRequest;
+	}
+
+	public void setServingRequest() 
+	{
+		if(isServingRequest==false)
+		{
+			if(currentFloor>((ElevatorConstants.TOWER_FLOORS/2)+1))
+				setGoingUp(false);		
+		}
 	}
 
 	public boolean isActive() 

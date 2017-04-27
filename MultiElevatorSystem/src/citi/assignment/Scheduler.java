@@ -1,6 +1,5 @@
 package citi.assignment;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,7 +15,6 @@ import citi.assignment.enums.RequestType;
  */
 public class Scheduler 
 {
-	private static List<Request> waitingRequests=new ArrayList<Request>();
 	
 	public void schedule(Request request, short atFloor, List<Elevator> eligibleElevators) throws InterruptedException
 	{
@@ -74,12 +72,6 @@ public class Scheduler
 								break;
 							}
 						}
-		}
-		
-		
-		if(elevator==null)
-		{	
-			waitingRequests.add(request);
 		}
 	}
 }
