@@ -282,11 +282,8 @@ public class Elevator implements ElevatorInterface,Serializable
 	
 	public void calculateStoppingPoint(Request request)
 	{
-		if(!(stoppingPoints.contains(request.getAtFloor())))
+		if(!(stoppingPoints.contains(request.getAtFloor())) || !(stoppingPoints.contains(request.getGoingToFloor())))
 		stoppingPoints.add(request.getAtFloor());
-		
-		if(!(stoppingPoints.contains(request.getGoingToFloor())))
-		stoppingPoints.add(request.getGoingToFloor());
 		
 		Collections.sort(stoppingPoints);
 	}
