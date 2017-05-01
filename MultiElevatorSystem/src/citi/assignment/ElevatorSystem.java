@@ -198,6 +198,8 @@ public class ElevatorSystem
 		Elevator elevator;
 		elevator=findElevatorWhichCanComeFirst(request.getRequestType());
 		
+		//TODO
+		//This is an explicit action. Should be placed in Scheduler.
 		if(elevator!=null)
 		{
 			elevator.canAcceptRequest(request);

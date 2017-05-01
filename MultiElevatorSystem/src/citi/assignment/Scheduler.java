@@ -15,7 +15,18 @@ import citi.assignment.enums.RequestType;
  */
 public class Scheduler 
 {
-	
+	/**
+	 * 
+	 * This method schedules the request to the Elevator which is eligible
+	 * for the request.
+	 * 
+	 * The algorithm used here is SCAN.
+	 * 
+	 * @param request
+	 * @param atFloor
+	 * @param eligibleElevators
+	 * @throws InterruptedException
+	 */
 	public void schedule(Request request, short atFloor, List<Elevator> eligibleElevators) throws InterruptedException
 	{
 		Elevator elevator=null;
@@ -64,14 +75,14 @@ public class Scheduler
 		else if(request.getRequestType()==RequestType.REQUEST_GO_DOWN)
 		{
 			// Check if any lift already present at current floor and going up.
-						for(Elevator elev : eligibleElevators)
-						{
-							if(elev.canAcceptRequest(request) && elev.getCurrentFloor()>atFloor)
-							{
-								elevator=elev;
-								break;
-							}
-						}
+			for(Elevator elev : eligibleElevators)
+			{
+				if(elev.canAcceptRequest(request) && elev.getCurrentFloor()>atFloor)
+				{
+					elevator=elev;
+					break;
+				}
+			}
 		}
 	}
 }
