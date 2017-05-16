@@ -1,8 +1,9 @@
 package citi.assignment;
 
 import citi.assignment.enums.RequestType;
+import citi.assignment.interfaces.RequestInterface;
 
-public class Request implements Comparable<Request>
+public class Request implements RequestInterface,Comparable<Request>
 {
 	final private RequestType requestType;
 	final private short goingToFloor;
@@ -46,5 +47,17 @@ public class Request implements Comparable<Request>
 			return 1;
 		
 		return 0;
+	}
+
+	@Override
+	public void goUp() 
+	{
+				
+	}
+
+	@Override
+	public void goDown() 
+	{
+				
 	}
 }

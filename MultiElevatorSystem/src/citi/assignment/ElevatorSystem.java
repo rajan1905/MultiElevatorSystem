@@ -149,6 +149,7 @@ public class ElevatorSystem
 	{
 		List<Elevator> knowAvailableElevators=knowAvailableElevators(request.getRequestType());
 		
+		// This is to process if there are no elevators present
 		if(knowAvailableElevators.size()==0)
 		{
 			checkIfAnyElevatorCouldBeForOppositeDirection(request);
